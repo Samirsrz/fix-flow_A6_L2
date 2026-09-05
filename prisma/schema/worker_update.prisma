@@ -1,0 +1,14 @@
+model WorkerUpdate {
+  id        String   @id @default(uuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id])
+  workerId  String
+  worker    Worker   @relation(fields: [workerId], references: [id])
+  note      String?
+  materials String?
+  images    String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([issueId])
+  @@map("worker_updates")
+}

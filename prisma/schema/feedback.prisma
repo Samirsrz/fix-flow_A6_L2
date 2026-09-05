@@ -1,0 +1,12 @@
+model Feedback {
+  id         String   @id @default(uuid())
+  issueId    String   @unique
+  issue      Issue    @relation(fields: [issueId], references: [id])
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@map("feedbacks")
+}

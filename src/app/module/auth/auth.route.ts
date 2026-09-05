@@ -1,50 +1,32 @@
-import { Router } from "express";
-import { Role } from "../../../generated/prisma/enums";
-import { auth } from "../../middleware/checkAuth";
-import { validateRequest } from "../../middleware/validateRequest";
-import { AuthController } from "./auth.controller";
-import { UserValidation } from "./auth.validation";
+import { Router } from "express"
+import { validateRequest } from "../../middleware/validateRequest"
+import { auth } from "../../middleware/checkAuth"
+import { AuthController } from "./auth.controller"
+import { AuthValidation } from "./auth.validation"
 
-const router = Router();
+const router = Router()
+
+router.post("/register", validateRequest(AuthValidation.registerResidentZodSchema), AuthController.registerResident)
 
 
+router.post("/resend-otp", validateRequest(AuthValidation.resendOtpZodSchema), AuthController.resendOtp)
 
-router.post("/register",
-	// (req : Request, res : Response, next : NextFunction) => {
 
-	// 	try {
-	// 		// const payload = req.body ? req.body : {}
-	// 		const payload = req.body ?? {}
+router.post("/verify-otp", validateRequest(AuthValidation.verifyOtpZodSchema), AuthController.verifyOtp)
 
-	// 		const result = PatientValidation.PatientRegistrationZodSchema.safeParse(payload);
 
-	// 		if (!result.success) {
-	// 			console.log(result.error);
-	// 			console.log(result.error.issues);
+router.post("/login", validateRequest(AuthValidation.loginZodSchema), AuthController.login)
 
-	// 			throw new Error(result.error.issues[0].message)
-	// 		}
 
-	// 		req.body = result.data
+router.post("/refresh-token", AuthController.refreshToken)
 
-	// 		next()
-	// 	} catch (error) {
-			
-	// 		next(error)
-	// 	}
-	// },
 
-	validateRequest(UserValidation.PatientRegistrationZodSchema),
-	 AuthController.registerPatient);
-router.post("/login",
-	validateRequest(UserValidation.LoginZodSchema),
-	 AuthController.loginUser);
-router.get(
-	"/me",
-	auth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN),
-	// validateRequest
-	AuthController.getMe,
-);
-router.post("/refresh-token", AuthController.refreshToken);
-router.post("/google", AuthController.googleLogin);
-export const AuthRoutes = router;
+router.post("/logout", auth(), AuthController.logout)
+
+
+router.post("/forgot-password", validateRequest(AuthValidation.forgotPasswordZodSchema), AuthController.forgotPassword)
+
+
+router.post("/reset-password", validateRequest(AuthValidation.resetPasswordZodSchema), AuthController.resetPassword)
+
+export const AuthRoutes = router

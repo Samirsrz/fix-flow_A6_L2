@@ -1,0 +1,16 @@
+model Community {
+  id        String    @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  residents Resident[]
+  manager   Manager?
+  issues    Issue[]
+  invoices  Invoice[]
+
+  @@index([city])
+  @@map("communities")
+}

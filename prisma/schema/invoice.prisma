@@ -1,0 +1,19 @@
+model Invoice {
+  id          String        @id @default(uuid())
+  communityId String
+  community   Community     @relation(fields: [communityId], references: [id])
+  residentId  String
+  resident    Resident      @relation(fields: [residentId], references: [id])
+  amount      Decimal       @db.Decimal(10, 2)
+  period      String
+  dueDate     DateTime
+  status      InvoiceStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  payments Payment[]
+
+  @@index([status])
+  @@index([residentId])
+  @@unique([residentId, period])
+  @@map("invoices")
+}

@@ -1,23 +1,44 @@
+enum AuthProvider {
+  CREDENTIAL
+  GOOGLE
+}
+
 enum Role {
-  SUPER_ADMIN
+  RESIDENT
+  MANAGER
+  WORKER
   ADMIN
-  DOCTOR
-  PATIENT
 }
 
 enum UserStatus {
   ACTIVE
-  BLOCKED
-  DELETED
+  BANNED
 }
 
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
-enum AuthProvider {
-  GOOGLE
-  CREDENTIAL
+enum IssueStatus {
+  REPORTED
+  UNDER_REVIEW
+  ASSIGNED
+  IN_PROGRESS
+  PENDING_CONFIRMATION
+  CLOSED
+  REJECTED
+  DISPUTED
+}
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
