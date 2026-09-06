@@ -12,6 +12,7 @@ import config from "./app/config";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
 import { AuthRoutes } from "./app/module/auth/auth.route";
+import { CommunityRoutes } from "./app/module/community/community.route";
 
 const app: Application = express();
 
@@ -31,42 +32,50 @@ app.use(cookieParser());
 
 app.use("/api/v1/auth", AuthRoutes);
 
-app.post("/zod", async (req: Request, res: Response, next : NextFunction) => {
 
-	try {
-		const UserZodSchema = z.object({
-			name: z.string().endsWith("r"),
-			email : z.email(),
-			age: z.number().optional(),
-			isVerified: z.boolean().optional(),
-			books: z.array(z.string()).optional()
-		})
+app.use("/api/v1/community",CommunityRoutes)
 
 
-		const payload = req.body;
 
-		const result = UserZodSchema.safeParse(payload)
+// app.post("/zod", async (req: Request, res: Response, next : NextFunction) => {
 
-		if(!result.success){
-			console.log(result.error);
-		}
-		if(result.success){
-			console.log(result.data);
-		}
+// 	try {
+// 		const UserZodSchema = z.object({
+// 			name: z.string().endsWith("r"),
+// 			email : z.email(),
+// 			age: z.number().optional(),
+// 			isVerified: z.boolean().optional(),
+// 			books: z.array(z.string()).optional()
+// 		})
 
 
-		res.status(httpStatus.OK).json({
-			success: true,
-			message: "Welcome to PH Healthcare System Backend",
-			data : result
-		});
-	} catch (error) {
-		console.log(error);
-		next(error)
-	}
-})
+// 		const payload = req.body;
+
+// 		const result = UserZodSchema.safeParse(payload)
+
+// 		if(!result.success){
+// 			console.log(result.error);
+// 		}
+// 		if(result.success){
+// 			console.log(result.data);
+// 		}
+
+
+// 		res.status(httpStatus.OK).json({
+// 			success: true,
+// 			message: "Welcome to PH Healthcare System Backend",
+// 			data : result
+// 		});
+// 	} catch (error) {
+// 		console.log(error);
+// 		next(error)
+// 	}
+// })
 
 // Basic route
+
+
+
 app.get("/", async (req: Request, res: Response) => {
 	res.status(httpStatus.OK).json({
 		success: true,

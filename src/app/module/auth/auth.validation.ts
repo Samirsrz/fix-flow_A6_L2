@@ -44,6 +44,16 @@ const resetPasswordZodSchema = z.object({
   }),
 })
 
+
+const updateMeZodSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).optional(),
+    phone: z.string().optional(),
+    unitNumber: z.string().optional(),
+    specialization: z.string().optional(),
+  }),
+});
+
 export const AuthValidation = {
   registerResidentZodSchema,
   resendOtpZodSchema,
@@ -51,4 +61,5 @@ export const AuthValidation = {
   loginZodSchema,
   forgotPasswordZodSchema,
   resetPasswordZodSchema,
+  updateMeZodSchema
 }

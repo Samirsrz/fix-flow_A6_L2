@@ -128,8 +128,35 @@ const resendOtp = catchAsync(async (req: Request, res: Response) => {
 
 
 
+const getMe = catchAsync(async (req, res) => {
+  const result = await AuthService.getMeDB(req.user!.userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Profile fetched successfully",
+    data: result,
+  });
+});
+
+
+
+
+const updateMe = catchAsync(async (req, res) => {
+  const result = await AuthService.updateMeDB(req.user!.userId, req.user!.role, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
+
+
 export const AuthController = {
-    registerResident,
+  registerResident,
   resendOtp,
   verifyOtp,
   login,
@@ -137,4 +164,6 @@ export const AuthController = {
   logout,
   forgotPassword,
   resetPassword,
+  getMe,
+  updateMe
 }

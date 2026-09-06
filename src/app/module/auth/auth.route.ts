@@ -29,4 +29,12 @@ router.post("/forgot-password", validateRequest(AuthValidation.forgotPasswordZod
 
 router.post("/reset-password", validateRequest(AuthValidation.resetPasswordZodSchema), AuthController.resetPassword)
 
+
+router.get("/me", auth(), AuthController.getMe);
+
+
+router.patch("/me", auth(), validateRequest(AuthValidation.updateMeZodSchema), AuthController.updateMe);
+
+
+
 export const AuthRoutes = router

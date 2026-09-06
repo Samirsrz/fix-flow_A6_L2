@@ -14,6 +14,7 @@ import type {
   IRegisterResidentPayload,
   IResendOtpPayload,
   IResetPasswordPayload,
+  IUpdateMePayload,
   IVerifyOtpPayload,
 } from "./auth.interface"
 import config from "../../config"
@@ -153,6 +154,8 @@ const verifyOtpDB = async (payload: IVerifyOtpPayload) => {
 
 
 
+
+
 const resendOtpDB = async (payload: IResendOtpPayload) => {
   const email = payload.email.trim().toLowerCase()
 
@@ -199,6 +202,9 @@ const resendOtpDB = async (payload: IResendOtpPayload) => {
 
   console.log("resendOtpDB: OTP resent to", email)
 }
+
+
+
 
 
 const loginDB = async(payload:ILoginPayload)=>{
@@ -280,6 +286,8 @@ console.log("refreshTokenDB: tokens refreshed for", user.email)
 }
 
 
+
+
 const forgotPasswordDB = async(payload:IForgotPasswordPayload)=>{
    
   const email = payload.email.trim().toString()
@@ -319,6 +327,10 @@ const forgotPasswordDB = async(payload:IForgotPasswordPayload)=>{
    })
   console.log("forgot-passwordDB: OTP sent to", email)
 }
+
+
+
+
 
 const resetPasswordDB = async (payload: IResetPasswordPayload) => {
   const email = payload.email.trim().toLowerCase()
@@ -375,6 +387,64 @@ const resetPasswordDB = async (payload: IResetPasswordPayload) => {
   
 
 
+const getMeDB = async(userId:string) =>{
+  const user = await prisma.user.findUnique({
+    where:{
+         id:userId
+    },
+    include:{
+      resident:true,
+      manager:true,
+      worker:true
+    },
+    omit:{
+      password:true
+    }
+  })
+ 
+   if(!user){
+    throw new Error("User not found");
+   }
+ 
+   return user
+
+}
+
+const updateMeDB = async (userId: string, role: Role, payload: IUpdateMePayload) => {
+  const { name, phone, unitNumber, specialization } = payload;
+
+  // build the profile-table nested update based on the caller's role
+  let profileRelationUpdate = {};
+
+  if (role === Role.RESIDENT) {
+    profileRelationUpdate = {
+      resident: { update: { phone, unitNumber } },
+    };
+  } else if (role === Role.MANAGER) {
+    profileRelationUpdate = {
+      manager: { update: { phone } },
+    };
+  } else if (role === Role.WORKER) {
+    profileRelationUpdate = {
+      worker: { update: { phone, specialization } },
+    };
+  }
+  // ADMIN has no profile table — profileRelationUpdate stays {}
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name,
+      ...profileRelationUpdate,
+    },
+    include: { resident: true, manager: true, worker: true },
+    omit: { password: true },
+  });
+
+  console.log("updateMeDB: profile updated for", updatedUser.email);
+
+  return updatedUser;
+};
 
 
 
@@ -386,4 +456,6 @@ export const AuthService = {
   refreshTokenDB,
   forgotPasswordDB,
   resetPasswordDB,
+  getMeDB,
+  updateMeDB
 }

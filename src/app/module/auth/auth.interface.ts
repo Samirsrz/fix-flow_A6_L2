@@ -38,3 +38,12 @@ export interface IRequestUser {
   email: string
   role: Role
 }
+
+
+
+export interface IUpdateMePayload {
+  name?: string;
+  phone?: string;
+  unitNumber?: string;
+  specialization?: string;
+}
