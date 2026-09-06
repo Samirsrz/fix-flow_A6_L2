@@ -191,14 +191,9 @@ if (user.role === "MANAGER") {
 }
 
  if(user.role==="WORKER" || user.role==="RESIDENT"){
-        throw new AppError(httpStatus.FORBIDDEN,"You dont have the permission")
-       
+        throw new AppError(httpStatus.FORBIDDEN,"You dont have the permission")     
  }
-     
   return community
-
-
-
 }
 
 
