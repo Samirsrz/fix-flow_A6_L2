@@ -13,4 +13,7 @@ router.post("/",auth(Role.RESIDENT),upload.array("images", 5),validateRequest(Is
 )
 
 router.get("/", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), IssueController.getAllIssues)
+
+
+router.get("/:id", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), IssueController.getIssueById)
 export const IssueRoutes = router

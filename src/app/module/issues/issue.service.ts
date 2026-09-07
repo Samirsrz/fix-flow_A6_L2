@@ -145,11 +145,57 @@ const getAllIssuesDB = async (
 
 
 
+const getIssueByIdDB = async (issueId: string, user: { userId: string; role: Role }) => {
+  const issue = await prisma.issue.findUnique({
+    where: { id: issueId },
+    include: {
+      resident: { include: { user: { select: { name: true, email: true } } } },
+      assignedWorker: { include: { user: { select: { name: true, email: true } } } },
+      category: true,
+    },
+  });
+
+  if (!issue) {
+    throw new AppError(httpStatus.NOT_FOUND, "Issue Not Found");
+  }
+
+  if (user.role === "MANAGER") {
+    const manager = await prisma.manager.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!manager || manager.communityId !== issue.communityId) {
+      throw new AppError(httpStatus.FORBIDDEN, "You don't have the permission");
+    }
+  }
+
+  if (user.role === "RESIDENT") {
+    const resident = await prisma.resident.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!resident || resident.id !== issue.residentId) {
+      throw new AppError(httpStatus.FORBIDDEN, "You don't have the permission");
+    }
+  }
+
+  if (user.role === "WORKER") {
+    const worker = await prisma.worker.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!worker || worker.id !== issue.assignedWorkerId) {
+      throw new AppError(httpStatus.FORBIDDEN, "You don't have the permission");
+    }
+  }
+
+  return issue;
+};
+
 
 
 
 
 export const IssueService = {
     createIssueDB,
-    getAllIssuesDB
+    getAllIssuesDB,
+    getIssueByIdDB
+
 }

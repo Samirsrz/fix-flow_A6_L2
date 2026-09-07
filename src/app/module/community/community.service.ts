@@ -106,69 +106,6 @@ const getCommunityDB = async (
 };
 
 
-
-// const getCommunityD = async(query:IQuery)=>{
-//     const limit = query.limit ? Number(query.limit) : 5;
-//     const page = query.page ? Number(query.page) : 1;
-//     const skip = (page - 1) * limit;
-//     const sortBy = query.sortBy ? query.sortBy : "createdAt";
-//     const sortOrder = query.sortOrder ? query.sortOrder : "desc";
-
-//    const andConditions:CommunityWhereInput[] = []
-
-//      if(query.searchTerm){
-//         andConditions.push({
-//             OR:[
-//                 {name:{contains:query.doctor, mode:"insensitive"}},
-//             {address:{contains:query.doctor, mode:"insensitive"}},
-//             {city:{contains:query.doctor,mode:"insensitive"}},
-//             ]
-//         })
-//      }
-//     if(query.communityId){
-//         andConditions.push({id: query.communityId})
-//     }
-
-//     if(query.name){
-//         andConditions.push({name:query.name})
-//     }
-
-//     if(query.address){
-//         andConditions.push({address:query.address})
-//     }
-//     if(query.city){
-//         andConditions.push({city:query.city})
-//     }
-  
-//     const allCommunities = await prisma.community.findMany({
-//         where:{
-//             AND:andConditions.length>0 ? andConditions : undefined
-//         },
-//         take:limit,
-//         skip:skip,
-//          orderBy:{
-//         [sortBy]:sortOrder
-//       },
-//     })
-      
-//     const totalCommunityCount = await prisma.community.count({
-//         where:{
-//             AND:andConditions
-//         }
-//     })
-
-//     return {
-//         data: allCommunities,
-//         meta:{
-//         page:page,
-//         limit:limit,
-//         totalPages:Math.ceil(totalCommunityCount/limit)
-//         }
-//     }
-
-// }
-
-
 const getCommunityByIdDB = async(communityId:string,user:{ userId: string; role: Role })=>{
     const community = await prisma.community.findUnique({
         where:{

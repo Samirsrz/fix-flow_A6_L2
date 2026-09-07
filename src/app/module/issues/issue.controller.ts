@@ -39,7 +39,18 @@ const getAllIssues = catchAsync(async (req, res) => {
 
 
 
+const getIssueById = catchAsync(async (req, res) => {
+  
+  const {id} = req.params;
+  const result = await IssueService.getIssueByIdDB(id as string , req.user!);
 
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Issue fetched successfully",
+    data: result,
+  });
+}); 
 
 
 
@@ -47,5 +58,6 @@ const getAllIssues = catchAsync(async (req, res) => {
 
 export const IssueController = {
     createIssue,
-    getAllIssues
+    getAllIssues,
+    getIssueById
 }
