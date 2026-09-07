@@ -13,6 +13,8 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
 import { AuthRoutes } from "./app/module/auth/auth.route";
 import { CommunityRoutes } from "./app/module/community/community.route";
+import { CategoryRoutes } from "./app/module/categories/categories.route";
+import { AdminRoutes } from "./app/module/admin/admin.route";
 
 const app: Application = express();
 
@@ -34,6 +36,10 @@ app.use("/api/v1/auth", AuthRoutes);
 
 
 app.use("/api/v1/community",CommunityRoutes)
+
+app.use("/api/v1/categories",CategoryRoutes)
+
+app.use("/api/v1/admin",AdminRoutes)
 
 
 
