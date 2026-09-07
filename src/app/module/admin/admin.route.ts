@@ -8,8 +8,15 @@ import { AdminValidation } from "./admin.validation";
 const router = Router()
 
 router.post("/create-role-users",auth(Role.ADMIN),AdminController.createRoleUsers) 
+
+
 router.get("/users",auth(Role.ADMIN),AdminController.getAllUsers) 
+
+
 router.patch("/user/:id",auth(Role.ADMIN),validateRequest(AdminValidation.updateUserStatusZodSchema),AdminController.updateUserById) 
+
+
+router.delete("/user/:id", auth(Role.ADMIN), AdminController.deleteUserById)
 
 
 export const AdminRoutes = router

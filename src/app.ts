@@ -15,6 +15,7 @@ import { AuthRoutes } from "./app/module/auth/auth.route";
 import { CommunityRoutes } from "./app/module/community/community.route";
 import { CategoryRoutes } from "./app/module/categories/categories.route";
 import { AdminRoutes } from "./app/module/admin/admin.route";
+import { IssueRoutes } from "./app/module/issues/issue.route";
 
 const app: Application = express();
 
@@ -40,6 +41,8 @@ app.use("/api/v1/community",CommunityRoutes)
 app.use("/api/v1/categories",CategoryRoutes)
 
 app.use("/api/v1/admin",AdminRoutes)
+
+app.use("/api/v1/issue",IssueRoutes)
 
 
 

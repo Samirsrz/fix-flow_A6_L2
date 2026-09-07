@@ -36,12 +36,16 @@ const createRoleUsersDB = async (payload: any) => {
       throw new AppError(httpStatus.BAD_REQUEST, "This community does not exist");
     }
 
-    const existingManager = await prisma.manager.findUnique({
-      where: { communityId: payload.communityId },
-    });
-    if (existingManager) {
-      throw new AppError(httpStatus.BAD_REQUEST, "This community already has a manager");
-    }
+  const existingManager = await prisma.manager.findFirst({
+  where: {
+    communityId: payload.communityId,
+    user: { isDeleted: false },
+  },
+})
+if (existingManager) {
+  throw new AppError(httpStatus.BAD_REQUEST, "This community already has a manager");
+}
+
   }
 
   const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
@@ -181,34 +185,32 @@ const updateUserByIdDB = async( payload: IUpdateUserStatusPayload,
 
 
 
-const deleteUserByIdDB = async(userId:string,adminUser:any)=>{
-   
-   const isUserExist = await prisma.user.findUnique({
-      where:{
-        id:userId
-      }
-    })
-    if(!isUserExist || isUserExist.isDeleted){
-      throw new AppError(httpStatus.NOT_FOUND,"User not found")
-    } 
-    
+const deleteUserByIdDB = async (userId: string, adminUser: { userId: string; role: Role }) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  if (!isUserExist || isUserExist.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
   if (userId === adminUser.userId) {
     throw new AppError(httpStatus.BAD_REQUEST, "You can't modify your own admin account");
   }
 
-   const deletedUser = await prisma.user.update({
-     where:{
-      id:userId
-     },
-     data:{
-      isDeleted:true,
-      deletedAt:new Date()
-     },omit: { password: true },
-   })
-  
-   return deletedUser
-}
+  // Manager has no dependent records (unlike Worker, referenced by Issue/WorkerUpdate),
+  // so it's safe to hard-delete the profile row and free up the unique communityId slot
+  if (isUserExist.role === Role.MANAGER) {
+    await prisma.manager.deleteMany({ where: { userId } });
+  }
 
+  const deletedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { isDeleted: true, deletedAt: new Date() },
+    omit: { password: true },
+  });
+
+  return deletedUser;
+};
 
 
 
