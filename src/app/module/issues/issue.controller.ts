@@ -53,11 +53,27 @@ const getIssueById = catchAsync(async (req, res) => {
 }); 
 
 
+const updateIssueStatus = catchAsync(async (req, res) => {
+  
+  const {id} = req.params;
+  
+  const result = await IssueService.updateIssueStatusDB(id as string ,req.body, req.user!);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Updated this issue successfully",
+    data: result,
+  });
+}); 
+
+
 
 
 
 export const IssueController = {
     createIssue,
     getAllIssues,
-    getIssueById
+    getIssueById,
+    updateIssueStatus
 }

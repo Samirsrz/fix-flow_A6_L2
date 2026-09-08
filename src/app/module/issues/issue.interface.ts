@@ -20,3 +20,11 @@ export interface IIssueQuery {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
+
+
+
+export interface IUpdateIssueStatusPayload {
+  status: IssueStatus;
+  priority?: Priority;
+  assignedWorkerId?: string;
+}

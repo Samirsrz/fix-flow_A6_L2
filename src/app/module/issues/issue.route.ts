@@ -16,4 +16,12 @@ router.get("/", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), Issu
 
 
 router.get("/:id", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), IssueController.getIssueById)
+
+router.patch(
+  "/:id/status",
+  auth(Role.MANAGER, Role.WORKER, Role.ADMIN),
+  validateRequest(IssueValidation.updateIssueStatusZodSchema),
+  IssueController.updateIssueStatus,
+)
+
 export const IssueRoutes = router

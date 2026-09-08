@@ -2,8 +2,9 @@ import { prisma } from "../../lib/prisma"
 import { AppError } from "../../utils/AppError"
 import httpStatus from "http-status"
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary"
-import { ICreateIssuePayload, IIssueQuery } from "./issue.interface"
-import { Prisma, Role } from "../../../generated/prisma/client"
+import { ICreateIssuePayload, IIssueQuery, IUpdateIssueStatusPayload } from "./issue.interface"
+import { IssueStatus, Prisma, Role } from "../../../generated/prisma/client"
+import { createAuditLog } from "../../utils/createAuditLog"
 
 const createIssueDB = async(payload:ICreateIssuePayload, files:Express.Multer.File[]|undefined, callerUserId:string)=>{
       
@@ -191,11 +192,115 @@ const getIssueByIdDB = async (issueId: string, user: { userId: string; role: Rol
 
 
 
+const updateIssueStatusDB = async (
+  issueId: string,
+  payload: IUpdateIssueStatusPayload,
+  user: { userId: string; role: Role },
+) => {
+  const issue = await prisma.issue.findUnique({ where: { id: issueId } });
+  if (!issue) {
+    throw new AppError(httpStatus.NOT_FOUND, "Issue not found");
+  }
+
+  const { status: newStatus, priority, assignedWorkerId } = payload;
+  const currentStatus = issue.status;
+
+  let updateData: Prisma.IssueUpdateInput = {};
+
+  if (user.role === Role.MANAGER) {
+    const manager = await prisma.manager.findUnique({ where: { userId: user.userId } });
+    if (!manager || manager.communityId !== issue.communityId) {
+      throw new AppError(httpStatus.FORBIDDEN, "You don't have permission over this issue");
+    }
+
+    const managerAllowedFrom: IssueStatus[] = ["REPORTED", "UNDER_REVIEW", "DISPUTED"];
+    if (!managerAllowedFrom.includes(currentStatus)) {
+      throw new AppError(httpStatus.BAD_REQUEST, `Cannot transition from ${currentStatus} as a Manager`);
+    }
+
+    if (newStatus === "ASSIGNED") {
+      if (!priority || !assignedWorkerId) {
+        throw new AppError(httpStatus.BAD_REQUEST, "priority and assignedWorkerId are required to assign an issue");
+      }
+
+      const worker = await prisma.worker.findUnique({ where: { id: assignedWorkerId } });
+      if (!worker) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Worker not found");
+      }
+
+      updateData = { status: "ASSIGNED", priority, assignedWorker: { connect: { id: assignedWorkerId } } };
+    } else if (newStatus === "REJECTED" && currentStatus === "REPORTED") {
+      updateData = { status: "REJECTED" };
+    } else {
+      throw new AppError(httpStatus.BAD_REQUEST, `Manager cannot move from ${currentStatus} to ${newStatus}`);
+    }
+  } 
+  
+  else if (user.role === Role.WORKER) {
+    const worker = await prisma.worker.findUnique({ where: { userId: user.userId } });
+    if (!worker || worker.id !== issue.assignedWorkerId) {
+      throw new AppError(httpStatus.FORBIDDEN, "This issue is not assigned to you");
+    }
+
+    if (currentStatus === "ASSIGNED" && newStatus === "IN_PROGRESS") {
+      updateData = { status: "IN_PROGRESS" };
+    } else if (currentStatus === "IN_PROGRESS" && newStatus === "PENDING_CONFIRMATION") {
+      updateData = { status: "PENDING_CONFIRMATION" };
+    } else {
+      throw new AppError(httpStatus.BAD_REQUEST, `Worker cannot move from ${currentStatus} to ${newStatus}`);
+    }
+  } 
+  
+  else if (user.role === Role.ADMIN) {
+    if (currentStatus !== "DISPUTED") {
+      throw new AppError(httpStatus.BAD_REQUEST, "Admin can only resolve DISPUTED issues here");
+    }
+
+    if (newStatus === "ASSIGNED") {
+      if (!priority || !assignedWorkerId) {
+        throw new AppError(httpStatus.BAD_REQUEST, "priority and assignedWorkerId are required to reassign a disputed issue");
+      }
+      updateData = { status: "ASSIGNED", priority, assignedWorker: { connect: { id: assignedWorkerId } } };
+    } else if (newStatus === "CLOSED") {
+      updateData = { status: "CLOSED" };
+    } else {
+      throw new AppError(httpStatus.BAD_REQUEST, "Admin can only resolve a dispute to ASSIGNED or CLOSED");
+    }
+  }
+  
+  else {
+    throw new AppError(httpStatus.FORBIDDEN, "You don't have permission to change issue status");
+  }
+
+  const updatedIssue = await prisma.issue.update({
+    where: { id: issueId },
+    data: updateData,
+  });
+
+  await createAuditLog(
+    user.userId,
+    "ISSUE_STATUS_CHANGE",
+    "Issue",
+    issue.id,
+    { from: currentStatus, to: updatedIssue.status },
+  );
+
+  return updatedIssue;
+};
+
+
+
+
+
+
+
+
 
 
 export const IssueService = {
     createIssueDB,
     getAllIssuesDB,
-    getIssueByIdDB
+    getIssueByIdDB,
+    updateIssueStatusDB
 
 }
