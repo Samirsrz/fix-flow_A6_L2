@@ -68,12 +68,77 @@ const updateIssueStatus = catchAsync(async (req, res) => {
 }); 
 
 
+const createWorkerUpdate = catchAsync(async (req, res) => {
+
+   const {id} = req.params
+   
+  const result = await IssueService.createWorkerUpdateDB(
+    id as string,
+    req.body,
+    req.files as Express.Multer.File[] | undefined,
+    req.user!
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Worker Update Created successfully",
+    data: result,
+  });
+});
 
 
+const getWorkerUpdates = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await IssueService.getWorkerUpdatesDB(id as string, req.user!);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Worker updates fetched successfully",
+    data: result,
+  });
+});
+
+
+
+
+const createIssueResolution = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await IssueService.issueResolutionCreateDB(id as string, req.body, req.user!);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Issue resolution recorded successfully",
+    data: result,
+  });
+});
+
+
+
+const getIssueFeedback = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await IssueService.getIssueFeedbackDB(id as string, req.user!);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Feedback fetched successfully",
+    data: result,
+  });
+});
 
 export const IssueController = {
     createIssue,
     getAllIssues,
     getIssueById,
-    updateIssueStatus
+    updateIssueStatus,
+    createWorkerUpdate,
+    getWorkerUpdates,
+    createIssueResolution,
+    getIssueFeedback
 }

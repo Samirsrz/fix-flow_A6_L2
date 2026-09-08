@@ -26,7 +26,30 @@ const updateIssueStatusZodSchema = z.object({
   }),
 });
 
+
+
+const createWorkerUpdateZodSchema = z.object({
+  body: z.object({
+    note: z.string().optional(),
+    materials: z.string().optional(),
+  }),
+});
+
+
+
+const issueResolutionZodSchema = z.object({
+  body: z.object({
+    action: z.enum(["CONFIRM", "DISPUTE"]),
+    rating: z.number().int().min(1).max(5).optional(),
+    comment: z.string().optional(),
+  }),
+});
+
+
+
 export const IssueValidation = {
   createIssueZodSchema,
   updateIssueStatusZodSchema,
+  createWorkerUpdateZodSchema,
+  issueResolutionZodSchema
 };

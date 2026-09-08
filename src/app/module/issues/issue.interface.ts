@@ -28,3 +28,9 @@ export interface IUpdateIssueStatusPayload {
   priority?: Priority;
   assignedWorkerId?: string;
 }
+
+
+export interface ICreateWorkerUpdatePayload {
+  note?: string;
+  materials?: string;
+}

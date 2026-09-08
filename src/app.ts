@@ -7,7 +7,6 @@ import express, {
 	type Response,
 } from "express";
 import httpStatus from "http-status";
-import z from "zod";
 import config from "./app/config";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
@@ -16,6 +15,7 @@ import { CommunityRoutes } from "./app/module/community/community.route";
 import { CategoryRoutes } from "./app/module/categories/categories.route";
 import { AdminRoutes } from "./app/module/admin/admin.route";
 import { IssueRoutes } from "./app/module/issues/issue.route";
+import { MesssageRoutes } from "./app/module/message/message.route";
 
 const app: Application = express();
 
@@ -44,44 +44,9 @@ app.use("/api/v1/admin",AdminRoutes)
 
 app.use("/api/v1/issue",IssueRoutes)
 
+app.use("/api/v1/issue/messages",MesssageRoutes)
 
 
-// app.post("/zod", async (req: Request, res: Response, next : NextFunction) => {
-
-// 	try {
-// 		const UserZodSchema = z.object({
-// 			name: z.string().endsWith("r"),
-// 			email : z.email(),
-// 			age: z.number().optional(),
-// 			isVerified: z.boolean().optional(),
-// 			books: z.array(z.string()).optional()
-// 		})
-
-
-// 		const payload = req.body;
-
-// 		const result = UserZodSchema.safeParse(payload)
-
-// 		if(!result.success){
-// 			console.log(result.error);
-// 		}
-// 		if(result.success){
-// 			console.log(result.data);
-// 		}
-
-
-// 		res.status(httpStatus.OK).json({
-// 			success: true,
-// 			message: "Welcome to PH Healthcare System Backend",
-// 			data : result
-// 		});
-// 	} catch (error) {
-// 		console.log(error);
-// 		next(error)
-// 	}
-// })
-
-// Basic route
 
 
 
