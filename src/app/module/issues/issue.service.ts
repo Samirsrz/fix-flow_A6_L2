@@ -41,6 +41,11 @@ const createIssueDB = async(payload:ICreateIssuePayload, files:Express.Multer.Fi
       images: imageUrls,
       status: "REPORTED",
     },
+      include: {
+      resident: { include: { user: { select: { name: true, email: true } } } },
+      assignedWorker: { include: { user: { select: { name: true, email: true } } } },
+      category: true,
+    },
   });
 
   return result;
@@ -372,7 +377,8 @@ const issue = await prisma.issue.findUnique({
 
    const result  = await prisma.workerUpdate.findMany({
     where:{issueId},
-    orderBy:{createdAt:"asc"}
+    orderBy:{createdAt:"asc"},
+    include: { worker: { include: { user: { select: { name: true } } } } }
    })
 
   return result;

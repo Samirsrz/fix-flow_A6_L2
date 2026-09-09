@@ -157,17 +157,17 @@ const getInvoicesForManagerDB = async (
 
 
 const getInvoicesForManagerBy_Id_DB = async(invoiceId:string, user: { userId: string; role: Role })=>{
-    const invoice = await prisma.invoice.findUnique({
-        where:{id:invoiceId},
-        include:{
-            resident:{
-                include:{
-                    user:true
-                }
-            },
-            payments:true
-        }
-    })
+ const invoice = await prisma.invoice.findUnique({
+  where: { id: invoiceId },
+  include: {
+    resident: {
+      include: {
+        user: { select: { name: true, email: true } },
+      },
+    },
+    payments: true,
+  },
+});
 
     if(!invoice){
         throw new AppError(httpStatus.NOT_FOUND,"No invoice with this ID")

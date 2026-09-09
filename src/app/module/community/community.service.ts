@@ -85,9 +85,22 @@ const getCommunityDB = async (
 
   const allCommunities = await prisma.community.findMany({
     where: whereClause,
+    include: {
+   manager: {
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+  },
+    residents: {
+     include: {
+      user: { select: { name: true, email: true } },
+    },
+  },
+},
     take: limit,
     skip: skip,
     orderBy: { [sortBy]: sortOrder },
+    
   });
 
   const totalCommunityCount = await prisma.community.count({
@@ -110,7 +123,19 @@ const getCommunityByIdDB = async(communityId:string,user:{ userId: string; role:
     const community = await prisma.community.findUnique({
         where:{
             id:communityId
-        }
+        },
+        include:{
+  manager: {
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+  },
+  residents: {
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+  },
+}
     })
     
     if(!community){

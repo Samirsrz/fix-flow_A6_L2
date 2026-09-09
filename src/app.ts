@@ -16,6 +16,7 @@ import { CategoryRoutes } from "./app/module/categories/categories.route";
 import { AdminRoutes } from "./app/module/admin/admin.route";
 import { IssueRoutes } from "./app/module/issues/issue.route";
 import { MesssageRoutes } from "./app/module/message/message.route";
+import { InvoiceRoutes } from "./app/module/invoices/invoices.route";
 
 const app: Application = express();
 
@@ -45,6 +46,8 @@ app.use("/api/v1/admin",AdminRoutes)
 app.use("/api/v1/issue",IssueRoutes)
 
 app.use("/api/v1/issue/messages",MesssageRoutes)
+
+app.use("/api/v1/invoice",InvoiceRoutes)
 
 
 

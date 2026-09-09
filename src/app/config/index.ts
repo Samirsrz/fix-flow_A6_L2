@@ -48,6 +48,9 @@ export default {
      bkash_password:process.env.BKASH_PASSWORD!,
      bkash_app_key:process.env.BKASH_APP_KEY!,
      bkash_app_secret:process.env.BKASH_APP_SECRET!, 
+     bkash_callback_url:process.env.BKASH_CALLBACK_URL!,
 
-    bkash_callback_url:process.env.BKASH_CALLBACK_URL!
-};
+    stripe_secret_key:process.env.STRIPE_SECRET_KEY!,
+    stripe_price_id:process.env.STRIPE_PRICE_ID!,
+    stripe_webhook_secret:process.env.STRIPE_WEBHOOK_SECRET!
+	};
