@@ -54,7 +54,7 @@ const deleteUserById = catchAsync(async (req, res) => {
    
     const {id} = req.params;
     const payload =req.body;
-    const adminUser  = req.user;
+    const adminUser  = req.user!;
 
     const result = await AdminService.deleteUserByIdDB(id as string,adminUser)
 
@@ -67,9 +67,27 @@ const deleteUserById = catchAsync(async (req, res) => {
 
 })
 
+
+const getDashboardStats = catchAsync(async (req, res) => {
+  const result = await AdminService.getDashboardStatsDB();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Dashboard stats fetched successfully",
+    data: result,
+  });
+});
+
+
+
+
+
+
 export const AdminController = {
     createRoleUsers,
     getAllUsers,
     updateUserById,
-    deleteUserById
+    deleteUserById,
+    getDashboardStats
 }

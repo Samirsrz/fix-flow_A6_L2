@@ -214,9 +214,61 @@ const deleteUserByIdDB = async (userId: string, adminUser: { userId: string; rol
 
 
 
+const getDashboardStatsDB = async () => {
+  const [issuesByStatusRaw, usersByRoleRaw, revenueResult, closedIssues] =
+    await Promise.all([
+      prisma.issue.groupBy({
+        by: ["status"],
+        _count: true,
+      }),
+      prisma.user.groupBy({
+        by: ["role"],
+        _count: true,
+        where: { isDeleted: false },
+      }),
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { status: "COMPLETED" },
+      }),
+      prisma.issue.findMany({
+        where: { status: "CLOSED" },
+        select: { createdAt: true, updatedAt: true },
+      }),
+    ]);
+
+  // reshape groupBy's array output into a flat { STATUS: count } object
+  const issuesByStatus: Record<string, number> = {};
+  issuesByStatusRaw.forEach((row) => {
+    issuesByStatus[row.status] = row._count;
+  });
+
+  const usersByRole: Record<string, number> = {};
+  usersByRoleRaw.forEach((row) => {
+    usersByRole[row.role] = row._count;
+  });
+
+  let avgResolutionTimeHours = 0;
+  if (closedIssues.length > 0) {
+    const totalHours = closedIssues.reduce((sum, issue) => {
+      const diffMs = issue.updatedAt.getTime() - issue.createdAt.getTime();
+      return sum + diffMs / (1000 * 60 * 60);
+    }, 0);
+    avgResolutionTimeHours = totalHours / closedIssues.length;
+  }
+
+  return {
+    issuesByStatus,
+    usersByRole,
+    totalRevenue: revenueResult._sum.amount ?? 0,
+    avgResolutionTimeHours: Math.round(avgResolutionTimeHours * 100) / 100,
+  };
+};
+
+
  export const AdminService = {
    getAllUsersDB,
    createRoleUsersDB,
    updateUserByIdDB,
-   deleteUserByIdDB
+   deleteUserByIdDB,
+   getDashboardStatsDB
 }

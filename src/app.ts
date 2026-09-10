@@ -17,6 +17,7 @@ import { AdminRoutes } from "./app/module/admin/admin.route";
 import { IssueRoutes } from "./app/module/issues/issue.route";
 import { MesssageRoutes } from "./app/module/message/message.route";
 import { InvoiceRoutes } from "./app/module/invoices/invoices.route";
+import { PaymentRoutes } from "./app/module/payments/payments.route";
 
 const app: Application = express();
 
@@ -30,6 +31,7 @@ app.use(
 // Enable URL-encoded form data parsing
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/v1/payment/webhook", express.raw({ type: "application/json" }));
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());
@@ -48,6 +50,8 @@ app.use("/api/v1/issue",IssueRoutes)
 app.use("/api/v1/issue/messages",MesssageRoutes)
 
 app.use("/api/v1/invoice",InvoiceRoutes)
+
+app.use("/api/v1/payment",PaymentRoutes)
 
 
 

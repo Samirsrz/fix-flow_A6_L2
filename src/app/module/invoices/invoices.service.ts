@@ -139,6 +139,7 @@ const getInvoicesForManagerDB = async (
     orderBy: { [sortBy]: sortOrder },
     include: {
       resident: { include: { user: { select: { name: true, email: true } } } },
+      payments:true
     },
   });
 
