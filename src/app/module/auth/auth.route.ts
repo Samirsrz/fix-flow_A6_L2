@@ -36,5 +36,9 @@ router.get("/me", auth(), AuthController.getMe);
 router.patch("/me", auth(), validateRequest(AuthValidation.updateMeZodSchema), AuthController.updateMe);
 
 
+router.post("/google-login", validateRequest(AuthValidation.googleLoginZodSchema), AuthController.googleLogin);
+
+
+router.post("/complete-profile", auth(), validateRequest(AuthValidation.completeProfileZodSchema), AuthController.completeProfile);
 
 export const AuthRoutes = router

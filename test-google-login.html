@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- biome-ignore lint/a11y/useHtmlLang: <explanation> -->
+<html>
+<head>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="g_id_onload"
+       data-client_id="109616694546-gfn527ie719j6kr3jdft7jfsepa1udcq.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+
+  <script>
+    function handleCredentialResponse(response) {
+      console.log("ID Token:", response.credential);
+      document.body.innerHTML += "<textarea style='width:100%;height:200px'>" + response.credential + "</textarea>";
+    }
+  </script>
+</body>
+</html>

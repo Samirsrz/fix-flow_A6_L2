@@ -21,6 +21,11 @@ import config from "../../config"
 import { JwtPayload, SignOptions } from "jsonwebtoken"
 import { transporter } from "../../lib/nodeMailer"
 import { email } from "zod"
+import { AppError } from "../../utils/AppError"
+import { googleClient } from "../../lib/googleAuth"
+
+import httpStatus from "http-status"
+
 
 
 const registerResidentDB = async (payload: IRegisterResidentPayload) => {
@@ -448,6 +453,111 @@ const updateMeDB = async (userId: string, role: Role, payload: IUpdateMePayload)
 
 
 
+const googleLoginDB = async (payload: { idToken: string }) => {
+  const ticket = await googleClient.verifyIdToken({
+    idToken: payload.idToken,
+    audience: config.google_client_id,
+  });
+
+  const googlePayload = ticket.getPayload();
+  if (!googlePayload || !googlePayload.email) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Invalid Google token");
+  }
+
+  const { email, name, sub: googleId } = googlePayload;
+
+  let user = await prisma.user.findUnique({
+    where: { email },
+    include: { resident: true },
+  });
+
+  if (user) {
+    if (user.authProvider === "CREDENTIAL") {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "This account was registered with email and password. Please log in with your password instead.",
+      );
+    }
+    // authProvider is already GOOGLE — proceed to token issuance below, no changes needed to the row
+  } else {
+    // brand new Google signup — create User only, no Resident yet
+    user = await prisma.user.create({
+      data: {
+        name: name || "Google User",
+        email,
+        googleId,
+        authProvider: "GOOGLE",
+        emailVerified: true,
+        role: "RESIDENT",
+      },
+      include: { resident: true },
+    });
+  }
+
+  const jwtPayload = {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = jwtUtils.createToken(jwtPayload, config.jwt_access_secret, config.jwt_access_expires_in as SignOptions);
+  const refreshToken = jwtUtils.createToken(jwtPayload, config.jwt_refresh_secret, config.jwt_refresh_expires_in as SignOptions);
+
+  return {
+    accessToken,
+    refreshToken,
+    needsProfileCompletion: !user.resident,
+  };
+};
+
+
+
+const completeProfileDB = async (
+  payload: { communityId: string; unitNumber?: string },
+  userId: string,
+) => {
+  console.log("completeProfileDB called with userId:", userId);
+
+  const existingResident = await prisma.resident.findUnique({
+    where: { userId },
+  });
+
+  console.log("existingResident found:", existingResident);
+  if (existingResident) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Profile already completed");
+  }
+
+  const community = await prisma.community.findUnique({
+    where: { id: payload.communityId },
+  });
+  if (!community) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Community not found");
+  }
+
+  const resident = await prisma.resident.create({
+    data: {
+      userId,
+      communityId: payload.communityId,
+      unitNumber: payload.unitNumber,
+    },
+  });
+
+  return resident;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const AuthService = {
   registerResidentDB,
   resendOtpDB,
@@ -457,5 +567,7 @@ export const AuthService = {
   forgotPasswordDB,
   resetPasswordDB,
   getMeDB,
-  updateMeDB
+  updateMeDB,
+  completeProfileDB,
+  googleLoginDB
 }

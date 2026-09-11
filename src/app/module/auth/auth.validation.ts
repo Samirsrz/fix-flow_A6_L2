@@ -54,6 +54,21 @@ const updateMeZodSchema = z.object({
   }),
 });
 
+
+const googleLoginZodSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, "ID token is required"),
+  }),
+});
+
+const completeProfileZodSchema = z.object({
+  body: z.object({
+    communityId: z.string().uuid("Invalid community ID"),
+    unitNumber: z.string().optional(),
+  }),
+});
+
+
 export const AuthValidation = {
   registerResidentZodSchema,
   resendOtpZodSchema,
@@ -61,5 +76,8 @@ export const AuthValidation = {
   loginZodSchema,
   forgotPasswordZodSchema,
   resetPasswordZodSchema,
-  updateMeZodSchema
+  updateMeZodSchema,
+
+  googleLoginZodSchema,
+  completeProfileZodSchema
 }

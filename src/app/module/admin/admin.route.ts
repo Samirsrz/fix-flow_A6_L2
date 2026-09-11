@@ -23,4 +23,5 @@ router.get("/dashboard-stats", auth(Role.ADMIN, Role.MANAGER), AdminController.g
 
 
 router.get("/audit-logs", auth(Role.ADMIN), AdminController.getAuditLogs)
+
 export const AdminRoutes = router

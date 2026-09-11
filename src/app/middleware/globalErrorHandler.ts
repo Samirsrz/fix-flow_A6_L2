@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
+import { AppError } from "../utils/AppError";
+import config from "../config";
 import httpStatus from "http-status";
 import { Prisma } from "../../generated/prisma/client";
-import config from "../config";
-
 export const globalErrorHandler = async (
 	err: any,
 	_req: Request,
@@ -16,9 +16,11 @@ export const globalErrorHandler = async (
 	let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
 	let errorMessage = err.message || "Internal Server Error";
 	const errorName = err.name || "Internal Server Error";
-	// let errorDetails = err.stack
 
-	if (err instanceof Prisma.PrismaClientValidationError) {
+	if (err instanceof AppError) {
+		statusCode = err.statusCode;
+		errorMessage = err.message;
+	} else if (err instanceof Prisma.PrismaClientValidationError) {
 		statusCode = httpStatus.BAD_REQUEST;
 		errorMessage = "You have provided incorrect field type or missing fields";
 	} else if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -49,9 +51,9 @@ export const globalErrorHandler = async (
 		errorMessage = err.message;
 	}
 
-	res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+	res.status(statusCode).json({
 		success: false,
-		statusCode: statusCode || httpStatus.INTERNAL_SERVER_ERROR,
+		statusCode,
 		name:
 			config.node_env === "development" ? errorName : "Internal Server Error",
 		message:

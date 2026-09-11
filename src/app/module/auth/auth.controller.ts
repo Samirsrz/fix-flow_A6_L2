@@ -154,6 +154,34 @@ const updateMe = catchAsync(async (req, res) => {
 });
 
 
+const googleLogin = catchAsync(async (req, res) => {
+  const result = await AuthService.googleLoginDB(req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Google login successful",
+    data: result,
+  });
+});
+
+const completeProfile = catchAsync(async (req, res) => {
+  const result = await AuthService.completeProfileDB(req.body, req.user!.userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.CREATED,
+    message: "Profile completed successfully",
+    data: result,
+  });
+});
+
+
+
+
+
+
+
 
 export const AuthController = {
   registerResident,
@@ -165,5 +193,7 @@ export const AuthController = {
   forgotPassword,
   resetPassword,
   getMe,
-  updateMe
+  updateMe,
+  googleLogin,
+  completeProfile
 }
