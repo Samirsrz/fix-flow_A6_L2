@@ -19,5 +19,8 @@ router.patch("/user/:id",auth(Role.ADMIN),validateRequest(AdminValidation.update
 router.delete("/user/:id", auth(Role.ADMIN), AdminController.deleteUserById)
 
 
-router.get("/dashboard-stats", auth(Role.ADMIN), AdminController.getDashboardStats)
+router.get("/dashboard-stats", auth(Role.ADMIN, Role.MANAGER), AdminController.getDashboardStats)
+
+
+router.get("/audit-logs", auth(Role.ADMIN), AdminController.getAuditLogs)
 export const AdminRoutes = router

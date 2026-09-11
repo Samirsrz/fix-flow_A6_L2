@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { Prisma, Role } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
-import { IGetAllUsersQuery, IUpdateUserStatusPayload } from "./admin.interface";
+import { IGetAllUsersQuery, IGetAuditLogsQuery, IUpdateUserStatusPayload } from "./admin.interface";
 import httpStatus from "http-status"
 import config from "../../config";
 import path  from "path"
@@ -214,29 +214,69 @@ const deleteUserByIdDB = async (userId: string, adminUser: { userId: string; rol
 
 
 
-const getDashboardStatsDB = async () => {
+const getDashboardStatsDB = async (user: { userId: string; role: Role }) => {
+  if (user.role === Role.MANAGER) {
+    const manager = await prisma.manager.findUnique({
+      where: { userId: user.userId },
+    });
+    if (!manager) {
+      throw new AppError(httpStatus.FORBIDDEN, "Manager profile not found");
+    }
+
+    const communityId = manager.communityId;
+
+    const [issuesByStatusRaw, residentCount, revenueResult, closedIssues] =
+      await Promise.all([
+        prisma.issue.groupBy({
+          by: ["status"],
+          _count: true,
+          where: { communityId },
+        }),
+        prisma.resident.count({ where: { communityId } }),
+        prisma.payment.aggregate({
+          _sum: { amount: true },
+          where: { status: "COMPLETED", invoice: { communityId } },
+        }),
+        prisma.issue.findMany({
+          where: { communityId, status: "CLOSED" },
+          select: { createdAt: true, updatedAt: true },
+        }),
+      ]);
+
+    const issuesByStatus: Record<string, number> = {};
+    issuesByStatusRaw.forEach((row) => {
+      issuesByStatus[row.status] = row._count;
+    });
+
+    let avgResolutionTimeHours = 0;
+    if (closedIssues.length > 0) {
+      const totalHours = closedIssues.reduce((sum, issue) => {
+        const diffMs = issue.updatedAt.getTime() - issue.createdAt.getTime();
+        return sum + diffMs / (1000 * 60 * 60);
+      }, 0);
+      avgResolutionTimeHours = totalHours / closedIssues.length;
+    }
+
+    return {
+      issuesByStatus,
+      residentCount,
+      totalRevenue: revenueResult._sum.amount ?? 0,
+      avgResolutionTimeHours: Math.round(avgResolutionTimeHours * 100) / 100,
+    };
+  }
+
+  // ADMIN — global stats, full role breakdown
   const [issuesByStatusRaw, usersByRoleRaw, revenueResult, closedIssues] =
     await Promise.all([
-      prisma.issue.groupBy({
-        by: ["status"],
-        _count: true,
-      }),
-      prisma.user.groupBy({
-        by: ["role"],
-        _count: true,
-        where: { isDeleted: false },
-      }),
-      prisma.payment.aggregate({
-        _sum: { amount: true },
-        where: { status: "COMPLETED" },
-      }),
+      prisma.issue.groupBy({ by: ["status"], _count: true }),
+      prisma.user.groupBy({ by: ["role"], _count: true, where: { isDeleted: false } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { status: "COMPLETED" } }),
       prisma.issue.findMany({
         where: { status: "CLOSED" },
         select: { createdAt: true, updatedAt: true },
       }),
     ]);
 
-  // reshape groupBy's array output into a flat { STATUS: count } object
   const issuesByStatus: Record<string, number> = {};
   issuesByStatusRaw.forEach((row) => {
     issuesByStatus[row.status] = row._count;
@@ -265,10 +305,54 @@ const getDashboardStatsDB = async () => {
 };
 
 
+const getAuditLogsDB = async (query: IGetAuditLogsQuery) => {
+  const limit = query.limit ? Number(query.limit) : 10;
+  const page = query.page ? Number(query.page) : 1;
+  const skip = (page - 1) * limit;
+
+  const andConditions: Prisma.AuditLogWhereInput[] = [];
+
+  if (query.entityType) {
+    andConditions.push({ entityType: query.entityType });
+  }
+
+  if (query.actorId) {
+    andConditions.push({ actorId: query.actorId });
+  }
+
+  const whereClause: Prisma.AuditLogWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const auditLogs = await prisma.auditLog.findMany({
+    where: whereClause,
+    take: limit,
+    skip: skip,
+    orderBy: { createdAt: "desc" },
+    include: {
+      actor: { select: { name: true, email: true, role: true } },
+    },
+  });
+
+  const totalCount = await prisma.auditLog.count({ where: whereClause });
+
+  return {
+    data: auditLogs,
+    meta: {
+      page,
+      limit,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+    },
+  };
+};
+
+
+
  export const AdminService = {
    getAllUsersDB,
    createRoleUsersDB,
    updateUserByIdDB,
    deleteUserByIdDB,
-   getDashboardStatsDB
+   getDashboardStatsDB,
+   getAuditLogsDB
 }

@@ -2,6 +2,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status"
 import { AdminService } from "./admin.service";
+import { IGetAuditLogsQuery } from "./admin.interface";
 
 const createRoleUsers = catchAsync(async (req, res) => {
 
@@ -69,7 +70,7 @@ const deleteUserById = catchAsync(async (req, res) => {
 
 
 const getDashboardStats = catchAsync(async (req, res) => {
-  const result = await AdminService.getDashboardStatsDB();
+  const result = await AdminService.getDashboardStatsDB(req.user!);
 
   sendResponse(res, {
     success: true,
@@ -81,13 +82,24 @@ const getDashboardStats = catchAsync(async (req, res) => {
 
 
 
+const getAuditLogs = catchAsync(async (req, res) => {
+  const query = req.query as unknown as IGetAuditLogsQuery;
 
+  const result = await AdminService.getAuditLogsDB(query);
 
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Audit logs fetched successfully",
+    data: result,
+  });
+});
 
 export const AdminController = {
     createRoleUsers,
     getAllUsers,
     updateUserById,
     deleteUserById,
-    getDashboardStats
+    getDashboardStats,
+    getAuditLogs
 }

@@ -10,7 +10,12 @@ export interface IGetAllUsersQuery {
   sortOrder?: "asc" | "desc";
 }
 
-
+export interface IGetAuditLogsQuery {
+  entityType?: string;
+  actorId?: string;
+  page?: string;
+  limit?: string;
+}
 
 export interface IUpdateUserStatusPayload {
   status: UserStatus;
