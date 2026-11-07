@@ -21,7 +21,7 @@ router.post("/login", validateRequest(AuthValidation.loginZodSchema), AuthContro
 router.post("/refresh-token", AuthController.refreshToken)
 
 
-router.post("/logout", auth(), AuthController.logout)
+router.post("/logout", AuthController.logout)
 
 
 router.post("/forgot-password", validateRequest(AuthValidation.forgotPasswordZodSchema), AuthController.forgotPassword)

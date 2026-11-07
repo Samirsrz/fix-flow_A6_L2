@@ -227,7 +227,7 @@ const loginDB = async(payload:ILoginPayload)=>{
     if(isUserExist.status===UserStatus.BANNED || isUserExist.isDeleted){
       throw new Error("You are banned from this application")
     }
-if(isUserExist.authProvider===AuthProvider.GOOGLE){
+   if(isUserExist.authProvider===AuthProvider.GOOGLE){
      throw new Error("This account is already logged in with Google, Try Google login")
    }
 
@@ -248,7 +248,7 @@ if(isUserExist.authProvider===AuthProvider.GOOGLE){
 
   console.log("loginDB: login success for", isUserExist.email)
 
-  return { accessToken, refreshToken }
+  return { accessToken, refreshToken,  user: { id: isUserExist.id, name: isUserExist.name, email: isUserExist.email, role: isUserExist.role } }
 
 
 }

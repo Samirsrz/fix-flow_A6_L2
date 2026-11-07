@@ -48,8 +48,14 @@ const getCommunityById = catchAsync(async (req: Request, res: Response) => {
 
 })
 
+
+const getPublicCommunities = catchAsync(async (req, res) => {
+	const result = await CommunityService.getPublicCommunitiesDB();
+	sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "Communities fetched successfully", data: result });
+});
 export const CommunityController = {
   createCommunity,
   getCommunity,
-  getCommunityById
+  getCommunityById,
+  getPublicCommunities
 };

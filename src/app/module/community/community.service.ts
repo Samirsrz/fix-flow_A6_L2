@@ -158,9 +158,14 @@ if (user.role === "MANAGER") {
   return community
 }
 
+// community.service.ts
+const getPublicCommunitiesDB = async () =>
+	prisma.community.findMany({ select: { id: true, name: true, city: true }, orderBy: { name: "asc" } });
+
 
 export const CommunityService ={
     createCommunityDB,
     getCommunityDB,
-    getCommunityByIdDB
+    getCommunityByIdDB,
+    getPublicCommunitiesDB
 }

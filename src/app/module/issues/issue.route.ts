@@ -15,6 +15,12 @@ router.post("/",auth(Role.RESIDENT),upload.array("images", 5),validateRequest(Is
 router.get("/", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), IssueController.getAllIssues)
 
 
+router.get(
+  "/workers",
+  auth(Role.MANAGER, Role.ADMIN),
+  IssueController.getWorkers,
+);
+
 router.get("/:id", auth(Role.RESIDENT, Role.MANAGER, Role.WORKER, Role.ADMIN), IssueController.getIssueById)
 
 router.patch(
@@ -45,5 +51,7 @@ router.post(
 
 
 router.get("/:id/feedback", auth(Role.RESIDENT, Role.MANAGER, Role.ADMIN), IssueController.getIssueFeedback)
+
+
 
 export const IssueRoutes = router

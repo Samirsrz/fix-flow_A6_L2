@@ -3,6 +3,9 @@ import httpStatus from "http-status"
 import { catchAsync } from "../../utils/catchAsync"
 import { sendResponse } from "../../utils/sendResponse"
 import { AuthService } from "./auth.service"
+import { AppError } from "../../utils/AppError"
+import { clearAuthCookies, setAuthCookies, REFRESH_COOKIE } from "../../utils/authCookies"
+
 
 const registerResident = catchAsync(async (req: Request, res: Response) => {
   await AuthService.registerResidentDB(req.body)
@@ -17,72 +20,51 @@ const registerResident = catchAsync(async (req: Request, res: Response) => {
 
 
 const verifyOtp = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.verifyOtpDB(req.body)
-  const { accessToken, refreshToken, user } = result
-
-  res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24,
-  })
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "none",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  })
+  const { accessToken, refreshToken, user } = await AuthService.verifyOtpDB(req.body)
+  setAuthCookies(res, accessToken, refreshToken)
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
     message: "Email verified, registration complete",
-    data: { accessToken, refreshToken, user },
+    data: { user },
   })
 })
 
 
 
-const login = catchAsync(async(req:Request, res:Response)=>{
-    const result = await AuthService.loginDB(req.body)
- 
-    const {accessToken,refreshToken}  = result
-
-       res.cookie("accessToken", accessToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 1000 * 60 * 60 * 24 })
-  res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 1000 * 60 * 60 * 24 * 7 })
+const login = catchAsync(async (req: Request, res: Response) => {
+  const { accessToken, refreshToken, user } = await AuthService.loginDB(req.body)
+  setAuthCookies(res, accessToken, refreshToken)
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Logged in successfully",
-    data: { accessToken, refreshToken },
+    data: { user },
   })
-
 })
 
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-  if (!req.cookies.refreshToken) {
-    throw new Error("Refresh token is missing")
+  const token = req.cookies[REFRESH_COOKIE]
+  if (!token) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Refresh token is missing")
   }
 
-  const result = await AuthService.refreshTokenDB(req.cookies.refreshToken)
-  const { accessToken, refreshToken: newRefreshToken } = result
-
-  res.cookie("accessToken", accessToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 1000 * 60 * 60 * 24 })
-  res.cookie("refreshToken", newRefreshToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 1000 * 60 * 60 * 24 * 7 })
+  const { accessToken, refreshToken: newRefreshToken } = await AuthService.refreshTokenDB(token)
+  setAuthCookies(res, accessToken, newRefreshToken)
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "New tokens generated successfully",
-    data: { accessToken, refreshToken: newRefreshToken },
+    data: null,
   })
 })
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  res.clearCookie("accessToken")
-  res.clearCookie("refreshToken")
+  clearAuthCookies(res)
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -155,15 +137,16 @@ const updateMe = catchAsync(async (req, res) => {
 
 
 const googleLogin = catchAsync(async (req, res) => {
-  const result = await AuthService.googleLoginDB(req.body);
+  const { accessToken, refreshToken, needsProfileCompletion } = await AuthService.googleLoginDB(req.body)
+  setAuthCookies(res, accessToken, refreshToken)
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Google login successful",
-    data: result,
-  });
-});
+    data: { needsProfileCompletion },
+  })
+})
 
 const completeProfile = catchAsync(async (req, res) => {
   const result = await AuthService.completeProfileDB(req.body, req.user!.userId);

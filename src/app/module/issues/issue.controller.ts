@@ -1,3 +1,4 @@
+import { prisma } from "../../lib/prisma";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import { IIssueQuery } from "./issue.interface";
@@ -132,6 +133,25 @@ const getIssueFeedback = catchAsync(async (req, res) => {
   });
 });
 
+
+const getWorkers = catchAsync(async (req, res) => {
+  // it has no DB/service function
+  const result = await prisma.worker.findMany({
+    include: {
+      user: { select: { name: true, email: true } },
+      assignedIssues: { select: { id: true, status: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Workers fetched successfully",
+    data: result,
+  });
+});
+
 export const IssueController = {
     createIssue,
     getAllIssues,
@@ -140,5 +160,6 @@ export const IssueController = {
     createWorkerUpdate,
     getWorkerUpdates,
     createIssueResolution,
-    getIssueFeedback
+    getIssueFeedback,
+    getWorkers
 }
